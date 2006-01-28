@@ -17,7 +17,7 @@
 #
 
 CC       = gcc -Wall
-CFLAGS   = -g -O2 -fomit-frame-pointer -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS   = -g -O2 -fomit-frame-pointer -D_GNU_SOURCE -D_LARGE_FILE -D_FILE_OFFSET_BITS=64
 LDFLAGS  = 
 
 BIN	= getmem setmem getio setio
