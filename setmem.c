@@ -112,9 +112,9 @@ int main(int argc, char *argv[])
 
   page_mask = ~((uintptr_t)getpagesize()-1);
   start = reg & page_mask;
-  len = ((reg + size*(argc-optind) + page_mask) & page_mask) - start;
+  len = ((reg + size*(argc-optind) + ~page_mask) & page_mask) - start;
 
-  map = mmap(NULL, len, PROT_WRITE, MAP_SHARED, fd, start);
+  map = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, start);
   if ( map == MAP_FAILED ) {
     perror("setmem:mmap");
     exit(1);
