@@ -1,4 +1,3 @@
-#ident "$Id$"
 /* ----------------------------------------------------------------------- *
  *   
  *   Copyright 2005 H. Peter Anvin - All Rights Reserved
@@ -24,6 +23,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <inttypes.h>
+#include <sysexits.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
   fd = open("/dev/mem", O_RDWR);
   if ( fd < 0 ) {
     perror("setmem:/dev/mem");
-    exit(1);
+    exit(EX_OSFILE);
   }
 
   page_mask = ~((uintptr_t)getpagesize()-1);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
   map = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, start);
   if ( map == MAP_FAILED ) {
     perror("setmem:mmap");
-    exit(1);
+    exit(EX_OSERR);
   }
 
   ptr = (char *)map + (reg & ~page_mask);
