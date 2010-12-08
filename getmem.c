@@ -55,7 +55,7 @@ void usage(void)
 
 int main(int argc, char *argv[])
 {
-  uintptr_t start, mapstart, len, maplen;
+  uintptr_t start, mapstart, len, left, maplen;
   char *mem, *buffer;
   volatile char *ptr;
   int fd;
@@ -128,13 +128,14 @@ int main(int argc, char *argv[])
     memcpy(buffer, mem+(start-mapstart), len);
   } else {
     ptr = mem;
+    left = len;
     
-    while (len) {
+    while (left) {
       static const int next_lower_power_of_2[8] =
 	{ 0, 1, 2, 2, 4, 4, 4, 4 };
 
-      if (len < size)
-	size = next_lower_power_of_2[len];
+      if (left < size)
+	size = next_lower_power_of_2[left];
 
       switch (size) {
       case 1:
@@ -153,7 +154,7 @@ int main(int argc, char *argv[])
 	abort();
       }
       buffer += size;
-      len -= size;
+      left -= size;
     }
   }
 
