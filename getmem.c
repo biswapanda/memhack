@@ -1,6 +1,7 @@
 /* ----------------------------------------------------------------------- *
  *   
  *   Copyright 2005-2010 H. Peter Anvin - All Rights Reserved
+ *   Copyright 2013 Intel Corporation; author: H. Peter Anvin
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -56,6 +57,7 @@ void usage(void)
 int main(int argc, char *argv[])
 {
   uintptr_t start, mapstart, len, left, maplen;
+  uintptr_t page_mask;
   char *mem, *buffer;
   volatile char *ptr;
   int fd;
@@ -106,6 +108,7 @@ int main(int argc, char *argv[])
     exit(EX_OSFILE);
   }
 
+  page_mask = ~((uintptr_t)getpagesize()-1);
   start = (uintptr_t)strtoumax(argv[1], NULL, 0);
   len   = (uintptr_t)strtoumax(argv[2], NULL, 0);
 
@@ -115,8 +118,8 @@ int main(int argc, char *argv[])
     exit(EX_OSERR);
   }
 
-  mapstart = start & ~0xffff;
-  maplen   = (len + (start-mapstart) + 0xffff) & ~0xffff;
+  mapstart = start & page_mask;
+  maplen   = (len + (start-mapstart) + ~page_mask) & page_mask;
 
   mem = mmap(NULL, maplen, PROT_READ, MAP_SHARED, fd, mapstart);
   if ( mem == MAP_FAILED ) {
@@ -124,10 +127,11 @@ int main(int argc, char *argv[])
     exit(EX_OSERR);
   }
 
+  ptr = mem+(start-mapstart);
+
   if (size == 0) {
-    memcpy(buffer, mem+(start-mapstart), len);
+    memcpy(buffer, (char *)ptr, len);
   } else {
-    ptr = mem;
     left = len;
     
     while (left) {
