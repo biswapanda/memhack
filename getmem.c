@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 {
   uintptr_t start, mapstart, len, left, maplen;
   uintptr_t page_mask;
-  char *mem, *buffer;
+  char *mem, *buffer, *dst;
   volatile char *ptr;
   int fd;
   int c;
@@ -97,7 +97,17 @@ int main(int argc, char *argv[])
     }
   }
 
-  if ( argc-optind != 2 ) {
+  if ( argc-optind < 1 || argc-optind > 2 ) {
+    usage();
+    exit(EX_USAGE);
+  }
+
+  start = (uintptr_t)strtoumax(argv[optind], NULL, 0);
+  if (argc-optind >= 2)
+    len = (uintptr_t)strtoumax(argv[optind+1], NULL, 0);
+  else if (size)
+    len = size;
+  else {
     usage();
     exit(EX_USAGE);
   }
@@ -109,8 +119,6 @@ int main(int argc, char *argv[])
   }
 
   page_mask = ~((uintptr_t)getpagesize()-1);
-  start = (uintptr_t)strtoumax(argv[1], NULL, 0);
-  len   = (uintptr_t)strtoumax(argv[2], NULL, 0);
 
   buffer = malloc(len);
   if ( !buffer ) {
@@ -133,6 +141,7 @@ int main(int argc, char *argv[])
     memcpy(buffer, (char *)ptr, len);
   } else {
     left = len;
+    dst = buffer;
     
     while (left) {
       static const int next_lower_power_of_2[8] =
@@ -143,21 +152,22 @@ int main(int argc, char *argv[])
 
       switch (size) {
       case 1:
-	*(uint8_t *)buffer = *(volatile uint8_t *)ptr;
+	*(uint8_t *)dst = *(volatile uint8_t *)ptr;
 	break;
       case 2:
-	*(uint16_t *)buffer = *(volatile uint16_t *)ptr;
+	*(uint16_t *)dst = *(volatile uint16_t *)ptr;
 	break;
       case 4:
-	*(uint32_t *)buffer = *(volatile uint32_t *)ptr;
+	*(uint32_t *)dst = *(volatile uint32_t *)ptr;
 	break;
       case 8:
-	*(uint64_t *)buffer = *(volatile uint64_t *)ptr;
+	*(uint64_t *)dst = *(volatile uint64_t *)ptr;
 	break;
       default:
 	abort();
       }
-      buffer += size;
+      dst += size;
+      ptr += size;
       left -= size;
     }
   }
