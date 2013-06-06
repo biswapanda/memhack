@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 	int fd;
 	int c;
 	int size = 0;
+	int exit_code = EX_OK;
 
 	program = argv[0];
 
@@ -117,7 +118,8 @@ int main(int argc, char *argv[])
 	fd = open("/dev/mem", O_RDONLY);
 	if (fd < 0) {
 		perror("/dev/mem");
-		exit(EX_OSFILE);
+		exit_code = EX_OSFILE;
+		goto exit_open_err;
 	}
 
 	page_mask = ~((uintptr_t) getpagesize() - 1);
@@ -125,7 +127,8 @@ int main(int argc, char *argv[])
 	buffer = malloc(len);
 	if (!buffer) {
 		perror("malloc");
-		exit(EX_OSERR);
+		exit_code = EX_OSERR;
+		goto exit_malloc_err;
 	}
 
 	mapstart = start & page_mask;
@@ -134,7 +137,8 @@ int main(int argc, char *argv[])
 	mem = mmap(NULL, maplen, PROT_READ, MAP_SHARED, fd, mapstart);
 	if (mem == MAP_FAILED) {
 		perror("mmap");
-		exit(EX_OSERR);
+		exit_code = EX_OSERR;
+		goto exit_mmap_err;
 	}
 
 	ptr = mem + (start - mapstart);
@@ -176,5 +180,10 @@ int main(int argc, char *argv[])
 
 	fwrite(buffer, len, 1, stdout);
 
-	return 0;
+exit_mmap_err:
+	free(buffer);
+exit_malloc_err:
+	close(fd);
+exit_open_err:
+	exit(exit_code);
 }
